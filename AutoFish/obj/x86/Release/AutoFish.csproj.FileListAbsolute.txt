@@ -1,0 +1,5 @@
+C:\Users\eurio\Desktop\GitsForSDV1.3.35\mod-sv-autofish\AutoFish\obj\x86\Release\AutoFish.csproj.CoreCompileInputs.cache
+C:\Users\eurio\Desktop\GitsForSDV1.3.35\mod-sv-autofish\AutoFish\bin\x86\Release\AutoFish.dll
+C:\Users\eurio\Desktop\GitsForSDV1.3.35\mod-sv-autofish\AutoFish\bin\x86\Release\AutoFish.pdb
+C:\Users\eurio\Desktop\GitsForSDV1.3.35\mod-sv-autofish\AutoFish\obj\x86\Release\AutoFish.dll
+C:\Users\eurio\Desktop\GitsForSDV1.3.35\mod-sv-autofish\AutoFish\obj\x86\Release\AutoFish.pdb
