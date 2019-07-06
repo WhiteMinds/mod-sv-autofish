@@ -1,0 +1,31 @@
+# user-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio cache/options
+.vs/
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# NuGet packages
+*.nupkg
+**/packages/*
+*.nuget.props
+*.nuget.targets
+
+# vanilla map tilesheets
+SmallBeachFarm/assets/paths.png
+SmallBeachFarm/assets/spring_beach.png
+SmallBeachFarm/assets/spring_outdoorsTileSheet.png
+SmallBeachFarm/assets/spring_town.png
