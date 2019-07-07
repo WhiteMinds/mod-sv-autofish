@@ -1,7 +1,7 @@
 ﻿{
   "Name": "AutoFish",
   "Author": "WhiteMind",
-  "Version": "1.2.0",
+  "Version": "1.3.0",
   "MinimumApiVersion": "2.10.2",
   "Description": "Auto play fish minigame and fishing rod auto hit.",
   "UniqueID": "WhiteMind.AF",
