@@ -6,5 +6,11 @@
   "UniqueID": "WhiteMind.AF",
   "EntryDll": "AutoFish.dll",
   "MinimumApiVersion": "3.0.0",
-  "UpdateKeys": [ "Nexus:1895" ]
+  "UpdateKeys": [ "Nexus:1895" ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
 }
