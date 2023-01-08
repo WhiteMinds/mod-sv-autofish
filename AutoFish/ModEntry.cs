@@ -18,12 +18,57 @@ namespace AutoFish
         /// <summary>
         ///     配置文件
         /// </summary>
-        private ModConfig _config = null!;
+        private ModConfig Config = null!;
 
         public override void Entry(IModHelper helper)
         {
-            _config = Helper.ReadConfig<ModConfig>();
+            Config = Helper.ReadConfig<ModConfig>();
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+            helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+        }
+
+        private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
+        {
+            var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (configMenu is null)
+                return;
+
+            configMenu.Register(
+                ModManifest,
+                () => Config = new ModConfig(),
+                () => Helper.WriteConfig(Config)
+            );
+
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("maxCastPower.name"),
+                getValue: () => Config.maxCastPower,
+                setValue: value => Config.maxCastPower = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("autoHit.name"),
+                getValue: () => Config.autoHit,
+                setValue: value => Config.autoHit = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("fastBite.name"),
+                getValue: () => Config.fastBite,
+                setValue: value => Config.fastBite = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("catchTreasure.name"),
+                getValue: () => Config.catchTreasure,
+                setValue: value => Config.catchTreasure = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("fasterSpeed.name"),
+                getValue: () => Config.fasterSpeed,
+                setValue: value => Config.fasterSpeed = value
+            );
         }
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
@@ -34,14 +79,14 @@ namespace AutoFish
 
             if (player.CurrentTool is FishingRod fishingRod)
             {
-                if (_config.fastBite && fishingRod.timeUntilFishingBite > 0)
+                if (Config.fastBite && fishingRod.timeUntilFishingBite > 0)
                     fishingRod.timeUntilFishingBite /= 2; // 快速咬钩
 
-                if (_config.autoHit)
+                if (Config.autoHit)
                     if (fishingRod is { isNibbling: true, isReeling: false, hit: false, pullingOutOfWater: false, fishCaught: false, showingTreasure: false })
                         fishingRod.DoFunction(player.currentLocation, 1, 1, 1, player); // 自动咬钩
 
-                if (_config.maxCastPower)
+                if (Config.maxCastPower)
                     fishingRod.castingPower = 1;
             }
 
@@ -60,7 +105,7 @@ namespace AutoFish
 
                 var whichBobber = Helper.Reflection.GetField<int>(bar, "whichBobber").GetValue();
 
-                if (_config.catchTreasure && hasTreasure && !treasureCaught && (distanceFromCatching > 0.75 || _catching))
+                if (Config.catchTreasure && hasTreasure && !treasureCaught && (distanceFromCatching > 0.75 || _catching))
                 {
                     _catching = true;
                     fishPos = treasurePos;
@@ -78,18 +123,22 @@ namespace AutoFish
                     deltaSpeed = 0.25f * 0.3f;
 
                 // 自动钓鱼的加速度
-                var autoDeltaSpeed = 0.3f;
-
-                // 目标速度
-                var targetSpeed = GetSpeed(autoDeltaSpeed, Math.Clamp(fishPos + 20 - 0.5f * barHeight, 0.0f, barPosMax) - barPos);
+                var autoDeltaSpeed = Config.fasterSpeed ? 0.6f : deltaSpeed;
+                
+                var target = Math.Clamp(fishPos + 20 - 0.5f * barHeight, 0.0f, barPosMax) - barPos;
+                var maxTargetDisplacement = Math.Min(target > -barHeight * 0.5f ? target / 2 : target + 0.25f * barHeight, barPosMax - barPos);
+                var minTargetDisplacement = Math.Max(target < barHeight * 0.5f ? target / 2 : target - 0.25f * barHeight, -barPos);
+                var maxSpeed = GetSpeed(autoDeltaSpeed, maxTargetDisplacement);
+                var minSpeed = GetSpeed(autoDeltaSpeed, minTargetDisplacement);
                 var onPressed = Game1.oldMouseState.LeftButton == ButtonState.Pressed ||
                                 Game1.isOneOfTheseKeysDown(Game1.oldKBState, Game1.options.useToolButton) ||
                                 (Game1.options.gamepadControls && (Game1.oldPadState.IsButtonDown(Buttons.X) || Game1.oldPadState.IsButtonDown(Buttons.A)));
 
-                if (bobberBarSpeed < targetSpeed)
-                    bobberBarSpeed += autoDeltaSpeed + (onPressed ? deltaSpeed : 0);
-                else if (bobberBarSpeed > targetSpeed)
-                    bobberBarSpeed -= autoDeltaSpeed + (onPressed ? 0 : deltaSpeed);
+                bobberBarSpeed += onPressed ? deltaSpeed : -deltaSpeed;
+                if (bobberBarSpeed < minSpeed)
+                    bobberBarSpeed += autoDeltaSpeed;
+                else if (bobberBarSpeed > maxSpeed)
+                    bobberBarSpeed -= autoDeltaSpeed;
 
                 Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").SetValue(bobberBarSpeed);
             }
@@ -98,6 +147,7 @@ namespace AutoFish
                 _catching = false;
             }
         }
+
 
         private float GetSpeed(float deltaSpeed, float targetDisplacement)
         {

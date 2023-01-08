@@ -4,7 +4,7 @@ namespace AutoFish
     public class ModConfig
     {
         /// <summary>
-        ///     最大力度投掷
+        ///     强制最大力度抛竿
         /// </summary>
         public bool maxCastPower { get; set; } = true;
         /// <summary>
@@ -19,5 +19,9 @@ namespace AutoFish
         ///     捕捉宝箱
         /// </summary>
         public bool catchTreasure { get; set; } = true;
+        /// <summary>
+        ///     浮漂会更快的移动以增加捕获率
+        /// </summary>
+        public bool fasterSpeed { get; set; } = false;
     }
 }
