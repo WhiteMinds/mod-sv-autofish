@@ -134,7 +134,7 @@ namespace AutoFish
                                 Game1.isOneOfTheseKeysDown(Game1.oldKBState, Game1.options.useToolButton) ||
                                 (Game1.options.gamepadControls && (Game1.oldPadState.IsButtonDown(Buttons.X) || Game1.oldPadState.IsButtonDown(Buttons.A)));
 
-                bobberBarSpeed += onPressed ? deltaSpeed : -deltaSpeed;
+                bobberBarSpeed += onPressed ? -deltaSpeed : deltaSpeed;
                 if (bobberBarSpeed < minSpeed)
                     bobberBarSpeed += autoDeltaSpeed;
                 else if (bobberBarSpeed > maxSpeed)
