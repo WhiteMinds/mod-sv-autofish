@@ -102,20 +102,14 @@ namespace AutoFish
                 var hasTreasure = Helper.Reflection.GetField<bool>(bar, "treasure").GetValue();
                 var bobberBarSpeed = Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").GetValue();
                 var barPosMax = 568 - barHeight;
+                var bobberTargetPosition = Helper.Reflection.GetField<float>(bar, "bobberTargetPosition").GetValue();
+                if (bobberTargetPosition == -1.0f)
+                    bobberTargetPosition = fishPos;
 
                 var whichBobber = Helper.Reflection.GetField<int>(bar, "whichBobber").GetValue();
 
-                if (Config.catchTreasure && hasTreasure && !treasureCaught && (distanceFromCatching > 0.75 || _catching))
-                {
-                    _catching = true;
-                    fishPos = treasurePos;
-                }
-
-                if (_catching && distanceFromCatching < 0.15)
-                {
-                    _catching = false;
-                    fishPos = Helper.Reflection.GetField<float>(bar, "bobberPosition").GetValue();
-                }
+                _catching = Config.catchTreasure && hasTreasure && !treasureCaught &&
+                            (distanceFromCatching > 0.75 || (_catching && distanceFromCatching > 0.15));
 
                 // 默认加速度
                 var deltaSpeed = 0.25f * 0.6f;
@@ -124,20 +118,21 @@ namespace AutoFish
 
                 // 自动钓鱼的加速度
                 var autoDeltaSpeed = Config.fasterSpeed ? 0.6f : deltaSpeed;
-                
-                var target = Math.Clamp(fishPos + 20 - 0.5f * barHeight, 0.0f, barPosMax) - barPos;
-                var maxTargetDisplacement = Math.Min(target > -barHeight * 0.5f ? target / 2 : target + 0.25f * barHeight, barPosMax - barPos);
-                var minTargetDisplacement = Math.Max(target < barHeight * 0.5f ? target / 2 : target - 0.25f * barHeight, -barPos);
-                var maxSpeed = GetSpeed(autoDeltaSpeed, maxTargetDisplacement);
-                var minSpeed = GetSpeed(autoDeltaSpeed, minTargetDisplacement);
+
+                var targetPos = _catching ? treasurePos : fishPos;
+                var otherPos = _catching ? fishPos : bobberTargetPosition;
+                var offset = Math.Clamp(otherPos - targetPos, -barHeight, barHeight) / 4;
+
+                var targetDisplacement = Math.Clamp(targetPos + offset + 20 - 0.5f * barHeight, 0.0f, barPosMax) - barPos;
+                var targetSpeed = GetSpeed(autoDeltaSpeed, targetDisplacement);
                 var onPressed = Game1.oldMouseState.LeftButton == ButtonState.Pressed ||
                                 Game1.isOneOfTheseKeysDown(Game1.oldKBState, Game1.options.useToolButton) ||
                                 (Game1.options.gamepadControls && (Game1.oldPadState.IsButtonDown(Buttons.X) || Game1.oldPadState.IsButtonDown(Buttons.A)));
 
-                bobberBarSpeed += onPressed ? -deltaSpeed : deltaSpeed;
-                if (bobberBarSpeed < minSpeed)
+                bobberBarSpeed += onPressed ? deltaSpeed : -deltaSpeed;
+                if (bobberBarSpeed < targetSpeed)
                     bobberBarSpeed += autoDeltaSpeed;
-                else if (bobberBarSpeed > maxSpeed)
+                else if (bobberBarSpeed > targetSpeed)
                     bobberBarSpeed -= autoDeltaSpeed;
 
                 Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").SetValue(bobberBarSpeed);
