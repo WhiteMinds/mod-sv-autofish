@@ -40,31 +40,31 @@ namespace AutoFish
             );
 
             configMenu.AddBoolOption(
-                mod: ModManifest,
+                ModManifest,
                 name: () => Helper.Translation.Get("maxCastPower.name"),
                 getValue: () => Config.maxCastPower,
                 setValue: value => Config.maxCastPower = value
             );
             configMenu.AddBoolOption(
-                mod: ModManifest,
+                ModManifest,
                 name: () => Helper.Translation.Get("autoHit.name"),
                 getValue: () => Config.autoHit,
                 setValue: value => Config.autoHit = value
             );
             configMenu.AddBoolOption(
-                mod: ModManifest,
+                ModManifest,
                 name: () => Helper.Translation.Get("fastBite.name"),
                 getValue: () => Config.fastBite,
                 setValue: value => Config.fastBite = value
             );
             configMenu.AddBoolOption(
-                mod: ModManifest,
+                ModManifest,
                 name: () => Helper.Translation.Get("catchTreasure.name"),
                 getValue: () => Config.catchTreasure,
                 setValue: value => Config.catchTreasure = value
             );
             configMenu.AddBoolOption(
-                mod: ModManifest,
+                ModManifest,
                 name: () => Helper.Translation.Get("fasterSpeed.name"),
                 getValue: () => Config.fasterSpeed,
                 setValue: value => Config.fasterSpeed = value
@@ -94,25 +94,26 @@ namespace AutoFish
             {
                 var barPos = Helper.Reflection.GetField<float>(bar, "bobberBarPos").GetValue();
                 var barHeight = Helper.Reflection.GetField<int>(bar, "bobberBarHeight").GetValue();
-                var fishPos = Helper.Reflection.GetField<float>(bar, "bobberPosition").GetValue();
-                var treasurePos = Helper.Reflection.GetField<float>(bar, "treasurePosition").GetValue();
-                var distanceFromCatching = Helper.Reflection.GetField<float>(bar, "distanceFromCatching").GetValue();
+                var barSpeed = Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").GetValue();
+                var barPosMax = 568 - barHeight;
 
+                var fishPos = Helper.Reflection.GetField<float>(bar, "bobberPosition").GetValue();
+                var fishTargetPos = Helper.Reflection.GetField<float>(bar, "bobberTargetPosition").GetValue();
+                if (fishTargetPos == -1.0f)
+                    fishTargetPos = fishPos;
+
+                var treasurePos = Helper.Reflection.GetField<float>(bar, "treasurePosition").GetValue();
                 var treasureCaught = Helper.Reflection.GetField<bool>(bar, "treasureCaught").GetValue();
                 var hasTreasure = Helper.Reflection.GetField<bool>(bar, "treasure").GetValue();
-                var bobberBarSpeed = Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").GetValue();
-                var barPosMax = 568 - barHeight;
-                var bobberTargetPosition = Helper.Reflection.GetField<float>(bar, "bobberTargetPosition").GetValue();
-                if (bobberTargetPosition == -1.0f)
-                    bobberTargetPosition = fishPos;
 
-                var whichBobber = Helper.Reflection.GetField<int>(bar, "whichBobber").GetValue();
-
-                _catching = Config.catchTreasure && hasTreasure && !treasureCaught &&
+                var distanceFromCatching = Helper.Reflection.GetField<float>(bar, "distanceFromCatching").GetValue();
+                var isBossFish = Helper.Reflection.GetField<bool>(bar, "bossFish").GetValue();
+                _catching = Config.catchTreasure && !isBossFish && hasTreasure && !treasureCaught &&
                             (distanceFromCatching > 0.75 || (_catching && distanceFromCatching > 0.15));
 
                 // 默认加速度
                 var deltaSpeed = 0.25f * 0.6f;
+                var whichBobber = Helper.Reflection.GetField<int>(bar, "whichBobber").GetValue();
                 if (whichBobber == 691) // 倒刺钩
                     deltaSpeed = 0.25f * 0.3f;
 
@@ -120,22 +121,20 @@ namespace AutoFish
                 var autoDeltaSpeed = Config.fasterSpeed ? 0.6f : deltaSpeed;
 
                 var targetPos = _catching ? treasurePos : fishPos;
-                var otherPos = _catching ? fishPos : bobberTargetPosition;
+                var otherPos = _catching ? fishPos : fishTargetPos;
                 var offset = Math.Clamp(otherPos - targetPos, -barHeight, barHeight) / 4;
 
                 var targetDisplacement = Math.Clamp(targetPos + offset + 20 - 0.5f * barHeight, 0.0f, barPosMax) - barPos;
                 var targetSpeed = GetSpeed(autoDeltaSpeed, targetDisplacement);
-                var onPressed = Game1.oldMouseState.LeftButton == ButtonState.Pressed ||
-                                Game1.isOneOfTheseKeysDown(Game1.oldKBState, Game1.options.useToolButton) ||
-                                (Game1.options.gamepadControls && (Game1.oldPadState.IsButtonDown(Buttons.X) || Game1.oldPadState.IsButtonDown(Buttons.A)));
+                var onPressed = IsOnPressedUseToolButton();
 
-                bobberBarSpeed += onPressed ? deltaSpeed : -deltaSpeed;
-                if (bobberBarSpeed < targetSpeed)
-                    bobberBarSpeed += autoDeltaSpeed;
-                else if (bobberBarSpeed > targetSpeed)
-                    bobberBarSpeed -= autoDeltaSpeed;
+                barSpeed += onPressed ? deltaSpeed : -deltaSpeed;
+                if (barSpeed < targetSpeed)
+                    barSpeed += autoDeltaSpeed;
+                else if (barSpeed > targetSpeed)
+                    barSpeed -= autoDeltaSpeed;
 
-                Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").SetValue(bobberBarSpeed);
+                Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").SetValue(barSpeed);
             }
             else
             {
@@ -143,8 +142,15 @@ namespace AutoFish
             }
         }
 
+        private static bool IsOnPressedUseToolButton()
+        {
+            return Game1.oldMouseState.LeftButton == ButtonState.Pressed ||
+                   Game1.isOneOfTheseKeysDown(Game1.oldKBState, Game1.options.useToolButton) ||
+                   (Game1.options.gamepadControls && (Game1.oldPadState.IsButtonDown(Buttons.X) || Game1.oldPadState.IsButtonDown(Buttons.A)));
+        }
 
-        private float GetSpeed(float deltaSpeed, float targetDisplacement)
+
+        private static float GetSpeed(float deltaSpeed, float targetDisplacement)
         {
             return targetDisplacement switch
             {

@@ -16,7 +16,7 @@ namespace AutoFish
         /// </summary>
         public bool fastBite { get; set; } = false;
         /// <summary>
-        ///     捕捉宝箱
+        ///     捕捉宝箱（当遇到传说鱼时忽略）
         /// </summary>
         public bool catchTreasure { get; set; } = true;
         /// <summary>
