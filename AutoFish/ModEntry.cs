@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -21,12 +22,16 @@ namespace AutoFish
         /// </summary>
         private ModConfig Config = null!;
 
+        private bool isContinusFishing;
+        
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+            helper.Events.Input.ButtonsChanged += OnButtonsChanged;
         }
+        
 
         private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
         {
@@ -70,6 +75,20 @@ namespace AutoFish
                 getValue: () => Config.fasterSpeed,
                 setValue: value => Config.fasterSpeed = value
             );
+            configMenu.AddBoolOption(
+                ModManifest,
+                name: () => Helper.Translation.Get("triggerKeepAutoFish.name"),
+                getValue: () => Config.triggerKeepAutoFish,
+                setValue: value => Config.triggerKeepAutoFish = value
+            );
+        }
+        
+        private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
+        {
+            if (Game1.player.CurrentTool is FishingRod && Config.triggerKeepAutoFish && Config.keepAutoFishKey.JustPressed())
+            {
+                isContinusFishing = !isContinusFishing;
+            }
         }
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
@@ -77,18 +96,24 @@ namespace AutoFish
             var player = Game1.player;
             if (!Context.IsWorldReady || player == null)
                 return;
-
+            
+            var onPressed = IsOnPressedUseToolButton();
+            
             if (player.CurrentTool is FishingRod fishingRod)
             {
-                if (Config.fastBite && fishingRod.timeUntilFishingBite > 0)
+               if (Config.fastBite && fishingRod.timeUntilFishingBite > 0)
                     fishingRod.timeUntilFishingBite /= 2; // 快速咬钩
 
-                if (Config.autoHit)
-                    if (fishingRod is { isNibbling: true, isReeling: false, hit: false, pullingOutOfWater: false, fishCaught: false, showingTreasure: false })
-                        fishingRod.DoFunction(player.currentLocation, 1, 1, 1, player); // 自动咬钩
-
-                if (Config.maxCastPower)
-                    fishingRod.castingPower = 1;
+               if (Config.autoHit && fishingRod is { isNibbling: true, isReeling: false, hit: false, pullingOutOfWater: false, fishCaught: false, showingTreasure: false })
+                   fishingRod.DoFunction(player.currentLocation, 1, 1, 1, player); // 自动咬钩
+                
+               if (isContinusFishing && fishingRod is {isCasting:false,isTimingCast: false,isFishing:false,isNibbling: false, isReeling: false, hit:false ,pullingOutOfWater: false, showingTreasure:false,castedButBobberStillInAir:false})
+               {
+                   Game1.pressUseToolButton();
+               }
+               
+               if (Config.maxCastPower)
+                   fishingRod.castingPower = 1;
             }
 
             if (Game1.activeClickableMenu is BobberBar bar) // 自动小游戏
@@ -100,7 +125,7 @@ namespace AutoFish
 
                 var fishPos = bar.bobberPosition;
                 var fishTargetPos = bar.bobberTargetPosition;
-                if (fishTargetPos == -1.0f)
+                if (Math.Abs(fishTargetPos - (-1.0f)) < 0.01f)
                     fishTargetPos = fishPos;
 
                 var treasurePos = bar.treasurePosition;
@@ -126,7 +151,7 @@ namespace AutoFish
 
                 var targetDisplacement = Math.Clamp(targetPos + offset + 20 - 0.5f * barHeight, 0.0f, barPosMax) - barPos;
                 var targetSpeed = GetSpeed(autoDeltaSpeed, targetDisplacement);
-                var onPressed = IsOnPressedUseToolButton();
+                
 
                 barSpeed += onPressed ? deltaSpeed : -deltaSpeed;
                 if (barSpeed < targetSpeed)
@@ -144,7 +169,7 @@ namespace AutoFish
 
         private static bool IsOnPressedUseToolButton()
         {
-            return Game1.oldMouseState.LeftButton == ButtonState.Pressed ||
+            return  Game1.oldMouseState.LeftButton == ButtonState.Pressed ||
                    Game1.isOneOfTheseKeysDown(Game1.oldKBState, Game1.options.useToolButton) ||
                    (Game1.options.gamepadControls && (Game1.oldPadState.IsButtonDown(Buttons.X) || Game1.oldPadState.IsButtonDown(Buttons.A)));
         }

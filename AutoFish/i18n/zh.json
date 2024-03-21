@@ -3,5 +3,6 @@
   "autoHit.name": "上钩时自动点击",
   "fastBite.name": "快速上钩",
   "catchTreasure.name": "捕捉宝箱（当遇到传说鱼时忽略）",
-  "fasterSpeed.name": "浮漂会更快的移动以增加捕获率"
+  "fasterSpeed.name": "浮漂会更快的移动以增加捕获率",
+  "triggerKeepAutoFish.name": "持续自动钓鱼"
 }
