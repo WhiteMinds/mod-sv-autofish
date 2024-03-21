@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -92,29 +93,28 @@ namespace AutoFish
 
             if (Game1.activeClickableMenu is BobberBar bar) // 自动小游戏
             {
-                var barPos = Helper.Reflection.GetField<float>(bar, "bobberBarPos").GetValue();
-                var barHeight = Helper.Reflection.GetField<int>(bar, "bobberBarHeight").GetValue();
-                var barSpeed = Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").GetValue();
+                var barPos = bar.bobberBarPos;
+                var barHeight = bar.bobberBarHeight;
+                var barSpeed = bar.bobberBarSpeed;
                 var barPosMax = 568 - barHeight;
 
-                var fishPos = Helper.Reflection.GetField<float>(bar, "bobberPosition").GetValue();
-                var fishTargetPos = Helper.Reflection.GetField<float>(bar, "bobberTargetPosition").GetValue();
+                var fishPos = bar.bobberPosition;
+                var fishTargetPos = bar.bobberTargetPosition;
                 if (fishTargetPos == -1.0f)
                     fishTargetPos = fishPos;
 
-                var treasurePos = Helper.Reflection.GetField<float>(bar, "treasurePosition").GetValue();
-                var treasureCaught = Helper.Reflection.GetField<bool>(bar, "treasureCaught").GetValue();
-                var hasTreasure = Helper.Reflection.GetField<bool>(bar, "treasure").GetValue();
+                var treasurePos = bar.treasurePosition;
+                var treasureCaught = bar.treasureCaught;
+                var hasTreasure = bar.treasure;
 
-                var distanceFromCatching = Helper.Reflection.GetField<float>(bar, "distanceFromCatching").GetValue();
-                var isBossFish = Helper.Reflection.GetField<bool>(bar, "bossFish").GetValue();
+                var distanceFromCatching = bar.distanceFromCatching;
+                var isBossFish = bar.bossFish;
                 _catching = Config.catchTreasure && !isBossFish && hasTreasure && !treasureCaught &&
                             (distanceFromCatching > 0.75 || (_catching && distanceFromCatching > 0.15));
 
                 // 默认加速度
                 var deltaSpeed = 0.25f * 0.6f;
-                var whichBobber = Helper.Reflection.GetField<int>(bar, "whichBobber").GetValue();
-                if (whichBobber == 691) // 倒刺钩
+                if (bar.bobbers.Contains("(O)691")) // 倒刺钩
                     deltaSpeed = 0.25f * 0.3f;
 
                 // 自动钓鱼的加速度
@@ -134,7 +134,7 @@ namespace AutoFish
                 else if (barSpeed > targetSpeed)
                     barSpeed -= autoDeltaSpeed;
 
-                Helper.Reflection.GetField<float>(bar, "bobberBarSpeed").SetValue(barSpeed);
+                bar.bobberBarSpeed = barSpeed;
             }
             else
             {
