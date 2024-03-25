@@ -37,5 +37,10 @@ namespace AutoFish
         ///     设置开始持续自动钓鱼按键 默认：Insert
         /// </summary>
         public KeybindList keepAutoFishKey { get; set; } = KeybindList.Parse("Insert");
+        
+        /// <summary>
+        ///     是否自动收集宝箱内容
+        /// </summary>
+        public bool autoLootTreasure { get; set; } = true;
     }
 }

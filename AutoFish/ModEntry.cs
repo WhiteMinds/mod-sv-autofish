@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Serialization;
 using GenericModConfigMenu;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -29,8 +34,27 @@ namespace AutoFish
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
             helper.Events.Input.ButtonsChanged += OnButtonsChanged;
+            helper.Events.Display.MenuChanged += OnMenuChanged;
         }
         
+        
+        private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
+        {
+            if (!(e.NewMenu is ItemGrabMenu itemGrab) || itemGrab.source != 3)
+                return;
+            
+            IList<Item> actualInventory = itemGrab.ItemsToGrabMenu.actualInventory;
+            for (int index = actualInventory.Count - 1; index >= 0; --index)
+            {
+                if (Game1.player.addItemToInventoryBool(actualInventory.ElementAt(index)))
+                    actualInventory.RemoveAt(index);
+            }
+            if (actualInventory.Count == 0)
+                itemGrab.exitThisMenu();
+            else
+                Monitor.Log("物品栏已满！",LogLevel.Warn);
+        }
+
 
         private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
         {
@@ -42,50 +66,57 @@ namespace AutoFish
                 ModManifest,
                 () => Config = new ModConfig(),
                 () => Helper.WriteConfig(Config)
-            );
+                );
 
             configMenu.AddBoolOption(
                 ModManifest,
                 name: () => Helper.Translation.Get("maxCastPower.name"),
                 getValue: () => Config.maxCastPower,
                 setValue: value => Config.maxCastPower = value
-            );
+                );
             configMenu.AddBoolOption(
                 ModManifest,
                 name: () => Helper.Translation.Get("autoHit.name"),
                 getValue: () => Config.autoHit,
                 setValue: value => Config.autoHit = value
-            );
+                );
             configMenu.AddBoolOption(
                 ModManifest,
                 name: () => Helper.Translation.Get("fastBite.name"),
                 getValue: () => Config.fastBite,
                 setValue: value => Config.fastBite = value
-            );
+                );
             configMenu.AddBoolOption(
                 ModManifest,
                 name: () => Helper.Translation.Get("catchTreasure.name"),
                 getValue: () => Config.catchTreasure,
                 setValue: value => Config.catchTreasure = value
-            );
+                );
             configMenu.AddBoolOption(
                 ModManifest,
                 name: () => Helper.Translation.Get("fasterSpeed.name"),
                 getValue: () => Config.fasterSpeed,
                 setValue: value => Config.fasterSpeed = value
-            );
+                );
             configMenu.AddBoolOption(
                 ModManifest,
                 name: () => Helper.Translation.Get("triggerKeepAutoFish.name"),
                 getValue: () => Config.triggerKeepAutoFish,
                 setValue: value => Config.triggerKeepAutoFish = value
-            );
+                );
             configMenu.AddKeybindList(
                 ModManifest,
                 name: () => Helper.Translation.Get("triggerKeepAutoFish.name"),
                 getValue: () => Config.keepAutoFishKey,
                 setValue: value => Config.keepAutoFishKey = value
-            );
+                );
+            configMenu.AddBoolOption(
+                ModManifest,
+                name: () => Helper.Translation.Get("autoLootTreasure.name"),
+                getValue: () => Config.autoLootTreasure,
+                setValue: value => Config.autoLootTreasure = value
+                );
+            
         }
         
         private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
@@ -112,7 +143,7 @@ namespace AutoFish
                if (Config.autoHit && fishingRod is { isNibbling: true, isReeling: false, hit: false, pullingOutOfWater: false, fishCaught: false, showingTreasure: false })
                    fishingRod.DoFunction(player.currentLocation, 1, 1, 1, player); // 自动咬钩
                 
-               if (isContinusFishing && fishingRod is {isCasting:false,isTimingCast: false,isFishing:false,isNibbling: false, isReeling: false, hit:false ,pullingOutOfWater: false, showingTreasure:false,castedButBobberStillInAir:false})
+               if (isContinusFishing && player.CanMove && fishingRod is {isCasting:false,isTimingCast: false,isFishing:false,isNibbling: false, isReeling: false, hit:false ,pullingOutOfWater: false, showingTreasure:false,castedButBobberStillInAir:false})
                {
                    Game1.pressUseToolButton();
                }
