@@ -1,6 +1,6 @@
 ﻿{
   "Name": "AutoFish",
-  "Author": ["WhiteMind","WangZC","AlerHughes"],
+  "Authors": ["WhiteMind","WangZC","AlerHughes"],
   "Version": "1.6.1",
   "Description": "Auto play fish minigame and fishing rod auto hit.",
   "UniqueID": "WhiteMind.AF",
