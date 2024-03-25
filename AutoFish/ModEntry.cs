@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using GenericModConfigMenu;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -80,6 +79,12 @@ namespace AutoFish
                 name: () => Helper.Translation.Get("triggerKeepAutoFish.name"),
                 getValue: () => Config.triggerKeepAutoFish,
                 setValue: value => Config.triggerKeepAutoFish = value
+            );
+            configMenu.AddKeybindList(
+                ModManifest,
+                name: () => Helper.Translation.Get("triggerKeepAutoFish.name"),
+                getValue: () => Config.keepAutoFishKey,
+                setValue: value => Config.keepAutoFishKey = value
             );
         }
         
