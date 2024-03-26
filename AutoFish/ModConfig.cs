@@ -42,5 +42,10 @@ namespace AutoFish
         ///     是否自动收集宝箱内容
         /// </summary>
         public bool autoLootTreasure { get; set; } = true;
+        
+        /// <summary>
+        ///     是否自动收集鱼和垃圾
+        /// </summary>
+        public bool autoLootFishAndTrash { get; set; } = true;
     }
 }

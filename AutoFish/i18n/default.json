@@ -6,5 +6,6 @@
   "fasterSpeed.name": "fasterSpeed",
   "triggerKeepAutoFish.name": "keep auto fishing automatically",
   "keepAutoFishKey.name": "keep auto fishing key map",
-  "autoLootTreasure.name": "Auto loot treasure"
+  "autoLootTreasure.name": "Auto loot treasure",
+  "autoLootFishAndTrash.name": "Auto loot fish and trash"
 }

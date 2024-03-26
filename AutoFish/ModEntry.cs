@@ -134,7 +134,7 @@ namespace AutoFish
                 return;
             
             var onPressed = IsOnPressedUseToolButton();
-            
+
             if (player.CurrentTool is FishingRod fishingRod)
             {
                if (Config.fastBite && fishingRod.timeUntilFishingBite > 0)
@@ -150,6 +150,17 @@ namespace AutoFish
                
                if (Config.maxCastPower)
                    fishingRod.castingPower = 1;
+
+               //use reflection, which may cause some performance problem.
+               if (Config.autoLootFishAndTrash && fishingRod.fishCaught)
+               {
+                   var currentMouseState = Helper.Reflection.GetField<MouseState>(Game1.input, "_currentMouseState");
+                   MouseState currentMouseStateVal = currentMouseState.GetValue();
+                   currentMouseState.SetValue(new MouseState(currentMouseStateVal.X,currentMouseStateVal.Y,
+                       currentMouseStateVal.ScrollWheelValue,ButtonState.Pressed,currentMouseStateVal.MiddleButton,
+                       currentMouseStateVal.RightButton,currentMouseStateVal.XButton1,currentMouseStateVal.XButton2,currentMouseStateVal.HorizontalScrollWheelValue));
+                   fishingRod.tickUpdate(Game1.currentGameTime,player);
+               }
             }
 
             if (Game1.activeClickableMenu is BobberBar bar) // 自动小游戏
