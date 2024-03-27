@@ -55,7 +55,7 @@ namespace AutoFish
                 Monitor.Log("物品栏已满！",LogLevel.Warn);
         }
 
-
+        private IReflectedField<MouseState>? _currentMouseState;
         private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
         {
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
@@ -116,7 +116,7 @@ namespace AutoFish
                 getValue: () => Config.autoLootTreasure,
                 setValue: value => Config.autoLootTreasure = value
                 );
-            
+            _currentMouseState = Helper.Reflection.GetField<MouseState>(Game1.input, "_currentMouseState");
         }
         
         private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
@@ -126,6 +126,7 @@ namespace AutoFish
                 isContinusFishing = !isContinusFishing;
             }
         }
+
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
         {
@@ -154,12 +155,33 @@ namespace AutoFish
                //use reflection, which may cause some performance problem.
                if (Config.autoLootFishAndTrash && fishingRod.fishCaught)
                {
-                   var currentMouseState = Helper.Reflection.GetField<MouseState>(Game1.input, "_currentMouseState");
-                   MouseState currentMouseStateVal = currentMouseState.GetValue();
-                   currentMouseState.SetValue(new MouseState(currentMouseStateVal.X,currentMouseStateVal.Y,
-                       currentMouseStateVal.ScrollWheelValue,ButtonState.Pressed,currentMouseStateVal.MiddleButton,
-                       currentMouseStateVal.RightButton,currentMouseStateVal.XButton1,currentMouseStateVal.XButton2,currentMouseStateVal.HorizontalScrollWheelValue));
+                   var oldKbState = Game1.oldKBState;
+                   foreach (var vaButton in Game1.options.useToolButton)
+                   {
+                       if (vaButton.key != Keys.None) 
+                       {
+                           Game1.oldKBState = new KeyboardState(
+                               vaButton.key
+                           ); 
+                       }
+
+                       if (_currentMouseState != null && vaButton.mouseLeft)
+                       {
+                           MouseState currentMouseStateVal = _currentMouseState.GetValue(); 
+                           _currentMouseState.SetValue(new MouseState(
+                               currentMouseStateVal.X,
+                               currentMouseStateVal.Y, 
+                               currentMouseStateVal.ScrollWheelValue,
+                               ButtonState.Pressed,
+                               currentMouseStateVal.MiddleButton, 
+                               currentMouseStateVal.RightButton,
+                               currentMouseStateVal.XButton1,
+                               currentMouseStateVal.XButton2,
+                               currentMouseStateVal.HorizontalScrollWheelValue));
+                       }
+                   }
                    fishingRod.tickUpdate(Game1.currentGameTime,player);
+                   Game1.oldKBState = oldKbState;
                }
             }
 
