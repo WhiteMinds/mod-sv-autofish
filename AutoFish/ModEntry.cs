@@ -181,7 +181,8 @@ namespace AutoFish
                        }
                    }
                    fishingRod.tickUpdate(Game1.currentGameTime,player);
-                   Game1.oldKBState = oldKbState;
+                   Game1.oldKBState = new KeyboardState();
+                   _currentMouseState?.SetValue(new MouseState());
                }
             }
 
