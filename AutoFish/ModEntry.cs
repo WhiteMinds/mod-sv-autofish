@@ -135,7 +135,7 @@ namespace AutoFish
             if (!Context.IsWorldReady || player == null)
                 return;
 
-            if (isContinusFishing && player.Stamina <=0)
+            if (isContinusFishing && player.Stamina < 0)
             {
                 isContinusFishing = false;
                 return;
