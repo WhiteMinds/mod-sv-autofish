@@ -131,8 +131,38 @@ public class ModEntry : Mod
 
     private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
     {
-        if (Game1.player.CurrentTool is FishingRod && _config.triggerKeepAutoFish && _config.keepAutoFishKey.JustPressed())
-            _isContinuousFishing = !_isContinuousFishing;
+        if (_config.keepAutoFishKey.JustPressed())
+        {
+            // 按下了切换持续钓鱼快捷键，切换一下持续钓鱼状态。
+            if (_isContinuousFishing)
+            {
+                // 如果当前正在持续钓鱼，则停止。
+                _isContinuousFishing = false;
+                ShowMessage(Helper.Translation.Get("triggerKeepAutoFish.turnedOff.tip"));
+            }
+            else if (Game1.player.CurrentTool is FishingRod && _config.triggerKeepAutoFish)
+            {
+                // 如果当前工具是钓鱼竿且启用了持续钓鱼，则开始持续钓鱼。
+                _isContinuousFishing = true;
+                var keyListString = string.Join("或", _config.keepAutoFishKey.Keybinds.Select(x => $"[{x}]"));
+                ShowMessage(string.Format(Helper.Translation.Get("triggerKeepAutoFish.turnedOn.tip"), keyListString));
+            }
+        }
+
+        return;
+
+        void ShowMessage(string message)
+        {
+            var cornerTextbox = HUDMessage.ForCornerTextbox(message);
+            for (var index = Game1.hudMessages.Count - 1; index >= 0; --index)
+            {
+                if (Game1.hudMessages[index].noIcon)
+                {
+                    Game1.hudMessages.RemoveAt(index);
+                }
+            }
+            Game1.hudMessages.Add(cornerTextbox);
+        }
     }
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)

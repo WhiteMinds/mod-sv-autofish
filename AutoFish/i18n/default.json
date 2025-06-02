@@ -7,5 +7,7 @@
   "triggerKeepAutoFish.name": "keep auto fishing automatically",
   "keepAutoFishKey.name": "keep auto fishing key map",
   "autoLootTreasure.name": "Auto loot treasure",
-  "autoLootFishAndTrash.name": "Auto loot fish and trash"
+  "autoLootFishAndTrash.name": "Auto loot fish and trash",
+  "triggerKeepAutoFish.turnedOn.tip": "Continuous fishing has been turned on. Press {0} to turn off.",
+  "triggerKeepAutoFish.turnedOff.tip": "Continuous fishing has been turned off"
 }

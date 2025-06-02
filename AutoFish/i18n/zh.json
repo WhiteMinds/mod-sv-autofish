@@ -7,5 +7,7 @@
   "triggerKeepAutoFish.name": "持续自动钓鱼",
   "keepAutoFishKey.name": "持续自动钓鱼按键",
   "autoLootTreasure.name": "自动收集宝箱",
-  "autoLootFishAndTrash.name": "自动收集鱼和垃圾"
+  "autoLootFishAndTrash.name": "自动收集鱼和垃圾",
+  "triggerKeepAutoFish.turnedOn.tip": "已开启持续钓鱼。按下{0}以关闭。",
+  "triggerKeepAutoFish.turnedOff.tip": "已关闭持续钓鱼"
 }
