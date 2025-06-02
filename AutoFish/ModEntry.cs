@@ -33,6 +33,11 @@ public class ModEntry : Mod
     /// </summary>
     private bool _isContinuousFishing;
 
+    /// <summary>
+    /// 是否可以继续钓鱼。
+    /// </summary>
+    private bool _canToContinueFishing;
+
     public override void Entry(IModHelper helper)
     {
         _config = Helper.ReadConfig<ModConfig>();
@@ -138,30 +143,17 @@ public class ModEntry : Mod
             {
                 // 如果当前正在持续钓鱼，则停止。
                 _isContinuousFishing = false;
+                _canToContinueFishing = false;
                 ShowMessage(Helper.Translation.Get("triggerKeepAutoFish.turnedOff.tip"));
             }
             else if (Game1.player.CurrentTool is FishingRod && _config.triggerKeepAutoFish)
             {
                 // 如果当前工具是钓鱼竿且启用了持续钓鱼，则开始持续钓鱼。
                 _isContinuousFishing = true;
+                _canToContinueFishing = true;
                 var keyListString = string.Join("或", _config.keepAutoFishKey.Keybinds.Select(x => $"[{x}]"));
                 ShowMessage(string.Format(Helper.Translation.Get("triggerKeepAutoFish.turnedOn.tip"), keyListString));
             }
-        }
-
-        return;
-
-        void ShowMessage(string message)
-        {
-            var cornerTextbox = HUDMessage.ForCornerTextbox(message);
-            for (var index = Game1.hudMessages.Count - 1; index >= 0; --index)
-            {
-                if (Game1.hudMessages[index].noIcon)
-                {
-                    Game1.hudMessages.RemoveAt(index);
-                }
-            }
-            Game1.hudMessages.Add(cornerTextbox);
         }
     }
 
@@ -170,12 +162,6 @@ public class ModEntry : Mod
         var player = Game1.player;
         if (!Context.IsWorldReady || player == null)
             return;
-
-        if (_isContinuousFishing && player.Stamina < 0)
-        {
-            _isContinuousFishing = false;
-            return;
-        }
 
         var onPressed = IsOnPressedUseToolButton();
 
@@ -188,12 +174,35 @@ public class ModEntry : Mod
                     { isNibbling: true, isReeling: false, hit: false, pullingOutOfWater: false, fishCaught: false, showingTreasure: false })
                 fishingRod.DoFunction(player.currentLocation, 1, 1, 1, player); // 自动咬钩
 
-            if (_isContinuousFishing && player.CanMove && fishingRod is
+            if (_isContinuousFishing && fishingRod is { pullingOutOfWater: true })
+            {
+                // 正常将鱼/垃圾拉出水，可以继续下一次钓鱼
+                _canToContinueFishing = true;
+            }
+
+            if (_isContinuousFishing
+                && player.CanMove
+                && fishingRod is
                 {
                     isCasting: false, isTimingCast: false, isFishing: false, isNibbling: false, isReeling: false, hit: false, pullingOutOfWater: false,
                     showingTreasure: false, castedButBobberStillInAir: false,
                 })
-                Game1.pressUseToolButton();
+            {
+                if (_canToContinueFishing && player.Stamina >= 20)
+                {
+                    // 如果可以继续钓鱼，且玩家体力大于等于20（避免精疲力尽），则继续钓鱼。
+                    Game1.pressUseToolButton();
+                }
+                else
+                {
+                    // 无法继续钓鱼，停止持续钓鱼。
+                    _isContinuousFishing = false;
+                    ShowMessage(Helper.Translation.Get("triggerKeepAutoFish.turnedOff.tip"));
+                }
+
+                // 无论是否可以继续钓鱼，都将_canToContinueFishing设置为false。
+                _canToContinueFishing = false;
+            }
 
             if (_config.maxCastPower)
                 fishingRod.castingPower = 1;
@@ -289,7 +298,6 @@ public class ModEntry : Mod
                (Game1.options.gamepadControls && (Game1.oldPadState.IsButtonDown(Buttons.X) || Game1.oldPadState.IsButtonDown(Buttons.A)));
     }
 
-
     private static float GetSpeed(float deltaSpeed, float targetDisplacement)
     {
         return targetDisplacement switch
@@ -304,5 +312,18 @@ public class ModEntry : Mod
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
     {
         _isContinuousFishing = false;
+    }
+
+    private static void ShowMessage(string message)
+    {
+        var cornerTextbox = HUDMessage.ForCornerTextbox(message);
+        for (var index = Game1.hudMessages.Count - 1; index >= 0; --index)
+        {
+            if (Game1.hudMessages[index].noIcon)
+            {
+                Game1.hudMessages.RemoveAt(index);
+            }
+        }
+        Game1.hudMessages.Add(cornerTextbox);
     }
 }
