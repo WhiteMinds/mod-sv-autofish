@@ -49,6 +49,10 @@ public class ModEntry : Mod
         if (e.NewMenu is not ItemGrabMenu { source: ItemGrabMenu.source_fishingChest } itemGrab)
             return;
 
+        // 如果不处于连续钓鱼状态，不处理钓鱼宝箱。
+        if (!_isContinuousFishing)
+            return;
+
         IList<Item> actualInventory = itemGrab.ItemsToGrabMenu.actualInventory;
         for (var index = actualInventory.Count - 1; index >= 0; --index)
         {
